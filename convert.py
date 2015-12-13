@@ -6,7 +6,7 @@ import os, glob, sys
 
 n = len(sys.argv)
 if n < 3 or n > 5:
-  print 'Usage: convert.py "PATTERN" OUTPUT_DIR [PERCENT=10] [PREFIX=img]'
+  print 'Usage: convert.py "PATTERN" OUTPUT_DIR [PERCENT=10] [PREFIX=img] '
   sys.exit(1)
 
 pattern = sys.argv[1]
@@ -23,7 +23,7 @@ else:
     prefix = 'img'
 
 files = glob.glob(pattern)
-files.sort()
+files.sort(key=lambda f: os.path.getmtime(f))
 
 for i, f in enumerate(files):
  cmd = 'convert -resize %%%d %s %s/%s%03d.jpg' % (percent, f, outdir, prefix, i+1)
