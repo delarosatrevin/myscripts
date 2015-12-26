@@ -40,7 +40,7 @@ import getopt
 import filecmp
 
 
-USAGE = "Usage: %s [-h] [-m<crc|md5>] <dir>*"
+USAGE = "Usage: %s [-h] [-m<crc|md5>] [-d] <dir>*"
 
 
 class crc:
@@ -127,10 +127,14 @@ def usage(message=None):
 
 def main():
     try:
-        opts, paths = getopt.getopt(sys.argv[1:], "hm:")
+        opts, paths = getopt.getopt(sys.argv[1:], "hm:ds")
     except getopt.GetoptError, err:
         usage(err)
+    
     method = crc
+    delete = False
+    summarize = False
+    
     for o, a in opts:
         if o == "-m":
             if a == "crc":
@@ -141,24 +145,51 @@ def main():
                 usage("Unknown grouping method: %s" % (a,))
         elif o == "-h":
             usage()
+
+        elif o == "-d":
+            delete = True
+
+        elif o == '-s':
+            summarize = True
+
         else:
             usage("Unknown option: %s%s" % (o, a))
 
     if len(paths) == 0:
         paths = ["."]
 
-    first = True
     groups = [all_files(*paths)]
     for grouper in [os.path.getsize, lambda file: digest(file, method)]:
         groups = group_by(groups, grouper, 2)
+
+    duplicatedFolders = {}
+
     for group in groups:
         for files in sorted(true_duplicates(group)):
-            if first:
-                first = False
-            else:
+            if not summarize:
                 print
-            for file in files:
-                print file
+            for i, f in enumerate(files):
+                # Delete duplicates (except the first file)
+                # only if the --delete option was passed
+                if summarize:
+                    d = os.path.dirname(f)
+                    if d not in duplicatedFolders:
+                        df = [0, 0]
+                        duplicatedFolders[d] = df
+                    else:
+                        df = duplicatedFolders[d]
+                    df[0] += 1
+                else:
+                    if i > 0 and delete:
+                        os.remove(f)
+                        print f, "(deleted)"
+                    else:
+                        print f
+
+    if summarize:
+        print "Directories with duplicates: "
+        for d, l in duplicatedFolders.iteritems():
+            print " %s: %s" % (d, l[0])
 
 
 if __name__ == "__main__":
