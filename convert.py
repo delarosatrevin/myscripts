@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# Usage: convert.py PATTERN OUTPUT_DIR [PERCENT=10]
 
 
 import os, glob, sys
@@ -26,6 +25,6 @@ files = glob.glob(pattern)
 files.sort(key=lambda f: os.path.getmtime(f))
 
 for i, f in enumerate(files):
- cmd = 'convert -resize %%%d %s %s/%s%03d.jpg' % (percent, f, outdir, prefix, i+1)
+ cmd = 'convert -resize %%%d "%s" "%s/%s%03d.jpg"' % (percent, f, outdir, prefix, i+1)
  print cmd
  os.system(cmd)
